@@ -1,0 +1,385 @@
+$.fn.slider = function(options){
+    var _slider = $(this);
+    var banItems;/* banner条目集 */
+	var navItems;/* 指示条集 */
+	var navWrap;/* 指示条容器 */
+	var navBgWrap;/* 透明背景容器 */
+	var prevOneBtn;/* 向前一个按钮 */
+	var nextOneBtn;/* 向后一个按钮 */
+	var prevPageBtn;/* 向前一页按钮 */
+	var nextPageBtn;/* 向后一页按钮 */
+	var length;/* banner条目数量 */
+	var curIndex;/* 当前索引 */
+	var curPage;/* 当前页 */
+	var pages;/* 总页数 */
+	var navItemWidth;/* 指示条元素宽 */
+	var opts;/* 参数集 */
+	var timer;/* 计时器 */
+	var timer2;/* 附加计时器 */
+	var offset;/* 指示条偏移值 */
+	var initialed = false;/* 初始化标识 */
+	var sliding = false;/* 滑动标识 */
+    
+	/* 默认属性defaults */
+	var defaults = {
+		banItemClass:'banItem',/* banner元素类名 */
+		navItemClass:'navItem',/* banner指示条元素类名 */
+		navWrapClass:'navWrap',
+		navBgWrapClass:'navBg',
+		prevOneBtnClass:'prevOneBtn',
+		nextOneBtnClass:'nextOneBtn',
+		prevPageBtnClass:'prevPageBtn',
+		nextPageBtnClass:'nextPageBtn',
+		perpage:4,/* 每页显示进度条条目数量 */
+		curClass:'curr',/* 当前激活的指示条元素附加类名 */
+		event:'hover', /* 切换事件,默认为鼠标经过切换,允许的值[hover:经过,click:单击] */
+		effect:'none',/* 切换效果,默认值none,允许的值[none:无效果,fade:淡入淡出] */
+		speed:5000/* 切换速度(相邻banner间切换的时间间隔),单位:ms */
+	};
+	
+	/* 设置长度 */
+	var setLength = function(_length) {
+		length = _length;
+		return length;
+	}
+	
+	/* 获取长度 */
+	var getLength = function() {
+		return initialed ? length : _slider.find('.' + opts.banItemClass).length;
+	}
+	
+	/* 设置当前索引 */
+	var setCurIndex = function(_index){
+		curIndex = _index;
+		return curIndex;
+	}
+	
+	/* 获取当前索引 */
+	var getCurIndex = function(){
+		var _index = typeof curIndex == 'undefined' ? 0 : parseInt(curIndex);
+		_index = isNaN(_index) ? 0 : _index;
+		return _index;
+	}
+	
+	/* (根据当前索引)获取上一个索引 */
+	var getPrevIndex = function(){
+		var _preIndex;
+		var _curIndex = getCurIndex();
+		var _length = getLength();
+		if(_curIndex < 1){
+			_preIndex = _length - 1;
+		}else{
+			_preIndex = _curIndex - 1;
+		}
+		return _preIndex;
+	}
+	
+	/* (根据当前索引)获取下一个索引 */
+	var getNextIndex = function() {
+		var _nextIndex;
+		var _curIndex = getCurIndex();
+		var _length = getLength();
+		
+		if(_curIndex >= _length - 1) {
+			_nextIndex = 0;
+		} else {
+			_nextIndex = _curIndex + 1;
+		}
+		return _nextIndex;
+	}
+	
+	/* 设置navItem的宽度 */
+	var setNavItemWidth = function(_width) {
+		navItemWidth = _width;
+		return navItemWidth;
+	}
+	
+	/* 获取navItem的宽度 */
+	var getNavItemWidth = function() {
+		if(initialed) {
+			return navItemWidth;
+		}
+		if(!navItems) {
+			navItems = _slider.find('.' + opts.navItemClass);
+		}
+		var _width = $(navItems).eq(0).width();
+		
+		var _margin_left = parseFloat($(navItems).eq(0).css('margin-left'));
+		_margin_left = isNaN(_margin_left) ? 0 : _margin_left;
+		var _margin_right = parseFloat($(navItems).eq(0).css('margin-right'));
+		_margin_right = isNaN(_margin_right) ? 0 : _margin_right;
+		var _padding_left = parseFloat($(navItems).eq(0).css('padding-left'));
+		_padding_left = isNaN(_padding_left) ? 0 : _padding_left;
+		var _padding_right = parseFloat($(navItems).eq(0).css('padding-right'));
+		_padding_right = isNaN(_padding_right) ? 0 : _padding_right;
+		var _border_left_width = parseFloat($(navItems).eq(0).css('border-left-width'));
+		_border_left_width = isNaN(_border_left_width) ? 0 : _border_left_width;
+		var _border_right_width = parseFloat($(navItems).eq(0).css('border-right-width'));
+		_border_right_width = isNaN(_border_right_width) ? 0 : _border_right_width;
+		
+		_width = _width + _margin_left + _margin_right + _padding_left + _padding_right + _border_left_width + _border_right_width;
+		return _width;
+	}
+	
+	/* 获取navItem的偏移值 */
+	var getOffset = function() {
+		var _offset = typeof offset == 'undefined' ? 0 : parseInt(offset);
+		_offset = isNaN(_offset) ? 0 : _offset;
+		return _offset;
+	}
+	
+	/* 设置navItem的偏移值 */
+	var setOffset = function(_offset) {
+		offset = _offset;
+		return offset;
+	}
+	
+	/* 获取总页数 */
+	var getPages = function() {
+		return initialed ? pages : Math.ceil(getLength()/opts.perpage);
+	}
+	
+	/* 设置总页数 */
+	var setPages = function(_pages) {
+		pages = _pages;
+		return pages;
+	}
+	
+	/* 设置当前页 */
+	var setCurPage = function(_page) {
+		curPage = _page;
+		return curPage;
+	}
+	
+	/* 获取当前页码 */
+	var getCurPage = function() {
+		var _curPage = typeof curPage == 'undefined' ? 1 : parseInt(curPage);
+		_curPage = isNaN(_curPage) ? 1 : _curPage;
+		return _curPage;
+	}
+	
+	/* 获取下一页码 */
+	var getNextPage = function() {
+		var _curPage = getCurPage();
+		return  _curPage < getPages() ? _curPage + 1 : 1;
+	}
+	
+	/* 获取上一页码 */
+	var getPrevPage = function() {
+		var _curPage = getCurPage();
+		return  _curPage > 1 ? _curPage - 1 : getPages();
+	}
+	
+	/* 跳转页面 */
+	var page = function(_page, hasSilde) {
+		var hasSilde = typeof hasSilde == 'undefined' ? false : (hasSilde ? true : false);
+		var _pages = getPages();/* 总页数 */
+		var _curPage = getCurPage();/* 当前页 */
+		var _navItemWidth = getNavItemWidth();
+		var _offset = getOffset();/* 当前偏移值 */
+		var r_offset = 0;/* 相对偏移(由页码差值确定),初始置0 */
+		if(_page == _curPage || _page < 1 || _page > _pages || _pages < 2)
+			return false;
+		
+		/* 确定偏移量 */
+		r_offset = -1 * (_page - _curPage) * opts.perpage * _navItemWidth;/* 计算相对偏移 */
+		_offset += r_offset;
+		var maxOffset = 0, minOffset = -1 * (getLength() - opts.perpage) * _navItemWidth;
+		_offset = _offset > maxOffset ? maxOffset : (_offset < minOffset ? minOffset : _offset);/* 防止偏移量溢出 */
+		
+		/* 翻页动作 */
+		$(navItems).each(function(){$(this).css('left', _offset + $(this).index() * getNavItemWidth())});
+		
+		if(!hasSilde){
+			/* 计算滑动到的索引 */
+			var _index = 0;
+			_index = parseInt(-1 * _offset / _navItemWidth);
+			if(_page > _curPage && _index <= getCurIndex() || _page < _curPage && getCurIndex() - _index < opts.perpage)
+				_index = getCurIndex();
+			slid(_index, true);
+		}
+		
+		setOffset(_offset);
+		setCurPage(_page);
+	}
+	
+	/* 翻至下一页 */
+	var nextPage = function() {
+		page(getNextPage());
+	}
+	
+	/* 翻至上一页 */
+	var prevPage = function() {
+		page(getPrevPage());
+	}
+	
+	/* 获取索引所在页码 */
+	var getIndexInPage = function(_index) {
+		var _index = typeof _index == 'undefined' ? getCurIndex() : _index;
+		var _indexInPage = 0;
+		var _offset = getOffset();/* 当前偏移 */
+		
+		var leftOffset = leftIndex = 0;/* 当前索引的左临界偏移及左临界索引 */
+		leftOffset = _offset + getCurIndex() * getNavItemWidth();
+		leftIndex = getCurIndex() - Math.ceil(leftOffset/getNavItemWidth());
+		if(_index >= leftIndex && _index < leftIndex + opts.perpage) {
+			_indexInPage = getCurPage();
+		} else if(_index < leftIndex) {
+			_indexInPage = getCurPage() - Math.ceil((leftIndex - _index)/opts.perpage);
+			_indexInPage = _indexInPage < 1 ? 1 : _indexInPage;
+		} else {
+			_indexInPage = getCurPage() + Math.ceil((_index - leftIndex - opts.perpage + 1)/opts.perpage);
+			_indexInPage = _indexInPage > getPages() ? getPages() : _indexInPage;
+		}
+		
+		return _indexInPage;
+	}
+	
+	/* 滑动方法 */
+	var slid = function(index, hasPage) {
+		var hasPage = typeof hasPage == 'undefined' ? false : (hasPage ? true : false);
+		if(sliding) return false;
+		sliding = true;
+		var index = typeof index == 'undefined' ? -1 : parseInt(index);
+		index = isNaN(index) ? -1 : (index >= length || index < 0 ? -1 : index);
+		
+		var _curIndex = getCurIndex();/* 切换前的索引(当前索引) */
+		var _currIndexInPage = getIndexInPage(_curIndex);/* 当索引所在页 */
+		
+		/* 下一个索引 */
+		var _nextIndex = 0;
+		
+		if(index >= 0){
+			_nextIndex = index;
+		}else{
+			_nextIndex = getNextIndex();
+		}
+		
+		if(_nextIndex == _curIndex) {
+			sliding = false;
+			return false;
+		}
+/* console.log('_curIndex = ' + getCurIndex() + ', _nextIndex = ' + _nextIndex); */
+		var _nextIndexInPage = getIndexInPage(_nextIndex);/* 下一个索引所在页 */
+/* console.log('_currIndexInPage = ' + _currIndexInPage + ', _nextIndexInPage = ' + _nextIndexInPage + '\r\n'); */
+		var flipPage = false;/* 翻页标识 */
+		if(_currIndexInPage != _nextIndexInPage && !hasPage) {/* 需要翻页 */
+			page(_nextIndexInPage, true);
+			flipPage = true;
+		}
+		
+		navItems.removeClass(opts.curClass);
+		navItems.eq(_nextIndex).addClass(opts.curClass);
+		if(opts.effect == 'fade'){
+			banItems.eq(_curIndex).css('z-index', 1);
+			banItems.eq(_nextIndex).css('z-index', 0);
+			banItems.eq(_nextIndex).show();
+			banItems.eq(_curIndex).fadeOut('slow', function(){sliding=false});
+		}else{
+			banItems.hide();
+			banItems.eq(_nextIndex).show(0,function(){sliding=false});
+		}
+		setCurIndex(_nextIndex);
+
+	}
+	
+	/* 开始 */
+	var start = function() {
+		try{
+			clearInterval(timer);
+		}catch(e){}
+		
+		timer = setInterval(function(){slid()}, opts.speed);
+	}
+	
+	/* 停止 */
+	var stop = function() {
+		clearInterval(timer);
+	}
+	
+	/* 运行 */
+	var run = function(){
+		init();
+		start();
+	}
+	
+	/* 初始化方法 */
+	var init = function() {
+		initialed = _slider.attr('initialed');
+		if(!initialed) {
+			opts = $.extend(defaults, options);/* 初始化参数 */
+			setCurIndex(getCurIndex());/* 初始索引置0 */
+			banItems = _slider.find('.' + opts.banItemClass);
+			navItems = _slider.find('.' + opts.navItemClass);
+			navWrap = _slider.find('.' + opts.navWrapClass);
+			navBgWrap = _slider.find('.' + opts.navBgWrapClass);
+			
+			setLength(getLength());
+			setNavItemWidth(getNavItemWidth());
+			
+			banItems.css('z-index', '1').eq(getCurIndex()).css('z-index','0');
+			navWrap.css('z-index', '1');
+			navBgWrap.css('z-index', '1');
+			navItems.parent().css('position', 'relative');
+			navItems.css('position', 'absolute');
+			navItems.each(function(){$(this).css({'top':0, 'left':$(this).index() * getNavItemWidth()})});
+			
+			prevOneBtn = _slider.find('.' + opts.prevOneBtnClass);
+			nextOneBtn = _slider.find('.' + opts.nextOneBtnClass);
+			prevPageBtn = _slider.find('.' + opts.prevPageBtnClass);
+			nextPageBtn = _slider.find('.' + opts.nextPageBtnClass);
+			
+			/* 初始化分页 */
+			setPages(getPages());
+			setCurPage(getCurPage());/* 设置当前页码为1 */
+			setOffset(getOffset());/* 设置当前偏移值为0 */
+			
+			/* 初始化显示 */
+			banItems.hide();
+			banItems.eq(getCurIndex()).show();
+			navItems.removeClass(opts.curClass);
+			navItems.eq(getCurIndex()).addClass(opts.curClass);
+			
+			if(opts.event == 'hover') {
+				navItems.bind('mouseover',function(){
+					stop();
+					_index = $(this).index();
+					slid(_index);
+				})
+			}
+			navItems.bind('click',function(){
+				stop();
+				_index = $(this).index();
+				slid(_index);
+			}).bind('mouseleave',function(){
+				start();
+			});
+			
+			prevOneBtn.mouseenter(function(){stop()}).mouseleave(function(){start()}).click(function(){slid(getPrevIndex())});
+			nextOneBtn.mouseenter(function(){stop()}).mouseleave(function(){start()}).click(function(){slid(getNextIndex())});
+			prevPageBtn.mouseenter(function(){stop()}).mouseleave(function(){start()}).click(function(){prevPage()});
+			nextPageBtn.mouseenter(function(){stop()}).mouseleave(function(){start()}).click(function(){nextPage()});
+			
+			_slider.attr('initialed','true');
+			initialed = true;
+		}
+	}
+	
+	run();
+}�,�n��      `u`uB�F)`��   ,    :https://pinyin.sogou.com/linux/js/slider.js necko:classified 1 strongly-framed 1 security-info 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 request-method GET response-head HTTP/1.1 200 OK
+Server: nginx
+Date: Fri, 29 Jan 2021 02:34:27 GMT
+Content-Type: application/x-javascript
+Content-Length: 11956
+Last-Modified: Mon, 24 Aug 2020 09:08:35 GMT
+ETag: "5f438393-2eb4"
+Accept-Ranges: bytes
+ original-response-headers Server: nginx
+Date: Fri, 29 Jan 2021 02:34:27 GMT
+Content-Type: application/x-javascript
+Content-Length: 11956
+Connection: keep-alive
+Last-Modified: Mon, 24 Aug 2020 09:08:35 GMT
+ETag: "5f438393-2eb4"
+Accept-Ranges: bytes
+ uncompressed-len 0 net-response-time-onstart 135 net-response-time-onstop 135   .�

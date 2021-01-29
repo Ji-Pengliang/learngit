@@ -1,0 +1,17 @@
+logrotate state -- version 2
+"/home/a19373763/.cache/upstart/unity7.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/unity-panel-service.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/unity-settings-daemon.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/upstart-event-bridge.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/indicator-sound.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/at-spi2-registryd.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/update-notifier-release.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/bamfdaemon.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/update-notifier-crash-_var_crash__usr_bin_unity-control-center.1000.crash.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/window-stack-bridge.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/indicator-session.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/dbus.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/ssh-agent.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/gnome-keyring-ssh.log" 2021-1-29-18:58:13
+"/home/a19373763/.cache/upstart/hud.log" 2021-1-29-19:0:44
+"/home/a19373763/.cache/upstart/gpg-agent.log" 2021-1-29-18:58:13
